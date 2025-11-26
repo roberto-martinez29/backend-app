@@ -77,7 +77,8 @@ def delete_category(db: Session, category_id: int):
 
 # Books
 def get_books(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Book).offset(skip).limit(limit).all()
+    books = db.query(models.Book).offset(skip).limit(limit).all()
+    return [_book_to_dict(b) for b in books]
 
 
 def find_books(
@@ -104,11 +105,15 @@ def find_books(
         q = q.filter(models.Book.price >= min_price)
     if max_price is not None:
         q = q.filter(models.Book.price <= max_price)
-    return q.offset(skip).limit(limit).all()
+    books = q.offset(skip).limit(limit).all()
+    return [_book_to_dict(b) for b in books]
 
 
 def get_book(db: Session, book_id: int):
-    return db.query(models.Book).filter(models.Book.bookID == book_id).first()
+    b = db.query(models.Book).filter(models.Book.bookID == book_id).first()
+    if not b:
+        return None
+    return _book_to_dict(b)
 
 
 def create_book(db: Session, book: schemas.BookCreate):
@@ -127,43 +132,77 @@ def create_book(db: Session, book: schemas.BookCreate):
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)
-    return db_obj
+    return _book_to_dict(db_obj)
 
 
 def update_book(db: Session, book_id: int, book: schemas.BookCreate):
-    db_obj = get_book(db, book_id)
-    if not db_obj:
+    # fetch real model (get_book returns transformed dict)
+    real = db.query(models.Book).filter(models.Book.bookID == book_id).first()
+    if not real:
         return None
-    db_obj.categoryID = book.categoryID
-    db_obj.title = book.title
-    db_obj.isbn = book.isbn
-    db_obj.year = book.year
-    db_obj.price = book.price
-    db_obj.noPages = book.noPages
-    db_obj.bookDescription = book.bookDescription
+    real.categoryID = book.categoryID
+    real.title = book.title
+    real.isbn = book.isbn
+    real.year = book.year
+    real.price = book.price
+    real.noPages = book.noPages
+    real.bookDescription = book.bookDescription
     if book.authorIDs is not None:
         authors = db.query(models.Author).filter(models.Author.authorID.in_(book.authorIDs)).all()
-        db_obj.authors = authors
+        real.authors = authors
     db.commit()
-    db.refresh(db_obj)
-    return db_obj
+    db.refresh(real)
+    return _book_to_dict(real)
 
 
 def delete_book(db: Session, book_id: int):
-    db_obj = get_book(db, book_id)
-    if not db_obj:
+    real = db.query(models.Book).filter(models.Book.bookID == book_id).first()
+    if not real:
         return False
-    db.delete(db_obj)
+    db.delete(real)
     db.commit()
     return True
 
 
 # Image retrieval helper (returns raw bytes or None)
 def get_book_image(db: Session, book_id: int):
-    db_obj = get_book(db, book_id)
-    if not db_obj:
+    real = db.query(models.Book).filter(models.Book.bookID == book_id).first()
+    if not real:
         return None
-    return db_obj.image
+    return real.image
+
+
+def _book_to_dict(b: models.Book) -> dict:
+    # Convert Book model into dict with single author string, category name and base64 image
+    # author names joined by ', '
+    author_names = [a.authorName for a in (b.authors or [])]
+    author_str = None
+    if author_names:
+        author_str = ", ".join(author_names)
+
+    category_desc = None
+    if getattr(b, "category", None):
+        try:
+            category_desc = b.category.categoryDescription
+        except Exception:
+            category_desc = None
+
+    # image_url points to the existing image endpoint for this book
+    image_url = f"/books/{b.bookID}/image"
+
+    return {
+        "bookID": b.bookID,
+        "categoryID": b.categoryID,
+        "title": b.title,
+        "isbn": b.isbn,
+        "year": b.year,
+        "price": b.price,
+        "noPages": b.noPages,
+        "bookDescription": b.bookDescription,
+        "author": author_str,
+        "category": category_desc,
+        "image_url": image_url,
+    }
 
 
 

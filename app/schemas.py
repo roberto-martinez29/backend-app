@@ -52,8 +52,13 @@ class BookCreate(BookBase):
 
 class Book(BookBase):
     bookID: int
-    authors: Optional[List[Author]] = []
-    
+    # single author name (string). If a book has multiple authors, names are joined by ", "
+    author: Optional[str] = None
+    # category name/description
+    category: Optional[str] = None
+    # image URL for retrieving the image (empty string when absent)
+    image_url: str = ""
+
     class Config:
         orm_mode = True
 
