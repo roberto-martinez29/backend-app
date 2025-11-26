@@ -1,0 +1,12 @@
+# Render service manifest (template)
+# Replace <repo> and <name> as needed, or connect via the Render dashboard
+services:
+  - type: web
+    name: bookstore-api
+    env: docker
+    # repo should be set when creating the service via the dashboard or CI
+    # repo: https://github.com/<your-org>/<your-repo>
+    plan: free
+    autoDeploy: true
+    # optional: health check path
+    healthCheckPath: /docs
