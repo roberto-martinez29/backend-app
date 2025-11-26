@@ -71,7 +71,8 @@ class Ordering(Base):
     __tablename__ = "ordering"
     bookID = Column("bookid", Integer, ForeignKey("book.bookid"), primary_key=True)
     orderID = Column("orderid", Integer, ForeignKey("book_order.orderid"), primary_key=True)
-    customer_id = Column("customerid", Integer, primary_key=True)
+    # map to actual DB column name which uses underscore
+    customer_id = Column("customer_id", Integer, primary_key=True)
 
     book = relationship("Book", back_populates="orderings")
     order = relationship("BookOrder", back_populates="order_items")
