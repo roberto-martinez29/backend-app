@@ -56,8 +56,6 @@ class Book(BookBase):
     author: Optional[str] = None
     # category name/description
     category: Optional[str] = None
-    # image URL for retrieving the image (empty string when absent)
-    image_url: str = ""
 
     class Config:
         orm_mode = True

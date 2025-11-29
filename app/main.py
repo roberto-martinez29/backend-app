@@ -1,6 +1,5 @@
 import os
-import imghdr
-from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from typing import List
@@ -8,26 +7,7 @@ from typing import List
 from . import models, schemas, crud
 from .database import engine, Base, get_db
 
-def _detect_image_mime(b: bytes) -> str | None:
-    # very small magic-number based detection for common image types
-    if not b or len(b) < 10:
-        return None
-    # JPEG
-    if b[0:2] == b"\xff\xd8":
-        return "image/jpeg"
-    # PNG
-    if b[0:8] == b"\x89PNG\r\n\x1a\n":
-        return "image/png"
-    # GIF
-    if b[0:6] in (b"GIF87a", b"GIF89a"):
-        return "image/gif"
-    # BMP
-    if b[0:2] == b"BM":
-        return "image/bmp"
-    # WebP: RIFF....WEBP
-    if b[0:4] == b"RIFF" and b[8:12] == b"WEBP":
-        return "image/webp"
-    return None
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -148,18 +128,7 @@ def get_book(book_id: int, db: Session = Depends(get_db)):
 
 @app.get("/books/{book_id}/image")
 def serve_book_image(book_id: int, db: Session = Depends(get_db)):
-    img = crud.get_book_image(db, book_id)
-    if img is None:
-        raise HTTPException(status_code=404, detail="Image not found")
-
-    # try to detect image type
-    fmt = imghdr.what(None, h=img)
-    if fmt:
-        media_type = f"image/{fmt}"
-    else:
-        media_type = "application/octet-stream"
-
-    return Response(content=img, media_type=media_type)
+    raise HTTPException(status_code=404, detail="Image endpoint removed; images are stored as strings/URLs")
 
 
 @app.put("/books/{book_id}", response_model=schemas.Book)

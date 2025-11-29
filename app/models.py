@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, LargeBinary, Date
+from sqlalchemy import Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
 from .database import Base
@@ -36,7 +36,8 @@ class Book(Base):
     price = Column(Integer, nullable=False)
     noPages = Column("nopages", Integer)
     bookDescription = Column("bookdescription", String(500))
-    image = Column("image", LargeBinary)
+    # image will be a string (e.g. URL or filename) in the DB
+    image = Column("image", String(500))
 
     category = relationship("Category", back_populates="books")
     authors = relationship("Author", secondary="author_book", back_populates="books")

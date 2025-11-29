@@ -167,6 +167,7 @@ def delete_book(db: Session, book_id: int):
 
 # Image retrieval helper (returns raw bytes or None)
 def get_book_image(db: Session, book_id: int):
+    # image column is now a string; this helper is deprecated
     real = db.query(models.Book).filter(models.Book.bookID == book_id).first()
     if not real:
         return None
@@ -202,7 +203,7 @@ def _book_to_dict(b: models.Book) -> dict:
         "bookDescription": b.bookDescription,
         "author": author_str,
         "category": category_desc,
-        "image_url": image_url,
+        # images are now represented as a string column on Book (e.g. URL or filename)
     }
 
 
