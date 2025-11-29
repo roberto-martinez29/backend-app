@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from . import models, schemas
 from sqlalchemy import select
-
+import os
 
 # Authors
 def get_authors(db: Session, skip: int = 0, limit: int = 100):
@@ -189,8 +189,11 @@ def _book_to_dict(b: models.Book) -> dict:
         except Exception:
             category_desc = None
 
-    # image_url points to the existing image endpoint for this book
-    image_url = f"/books/{b.bookID}/image"
+    base = os.getenv("BASE_URL", "").rstrip("/")
+    if base:
+        image_url = f"{base}/books/{b.bookID}/image"
+    else:
+        image_url = f"/books/{b.bookID}/image"
 
     return {
         "bookID": b.bookID,
